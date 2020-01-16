@@ -1,0 +1,31 @@
+main {
+    flex: 1;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: scroll;
+    height: calc(100vh - 60px);
+  }
+
+#manifest h2 {
+    color: rgb(150, 138, 124);
+    width: 100%;
+    border-bottom: 3px dotted rgb(122, 113, 103);
+    padding-bottom: 6px; 
+    margin-bottom: 10px; 
+}
+
+#manifest p {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    padding-bottom: 20px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid  rgb(122, 113, 103);
+    border-radius: 6px;
+}
+
+#manifest p span {
+    margin: 8px 2.5%;
+    min-width: fit-content;
+}

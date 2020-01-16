@@ -1,0 +1,31 @@
+#photo-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+#photo-section h2 {
+    color: rgb(150, 138, 124);
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+#photo-section div {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: space-around;
+}
+
+#photo-section p {
+    margin: 5px;
+    margin-bottom: 20px; 
+}
+
+#photo-section img {
+    border: 1px solid rgb(150, 138, 124);
+    min-width: 240px;
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 10px;
+}

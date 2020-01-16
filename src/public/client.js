@@ -3,7 +3,8 @@ let store = {
     apod: '',
     selectedRover: 'curiosity',
     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
-    menuActive: false
+    menuActive: false,
+    selectedSol: {}
 }
 
 // add our markup to the page
@@ -64,9 +65,7 @@ const ImageOfTheDay = (apod) => {
     // If image does not already exist, or it is not from today -- request it again
     const today = new Date()
     const photodate = new Date(apod.date)
-    console.log(photodate.getDate(), today.getDate());
 
-    console.log(photodate.getDate() === today.getDate());
     if (!apod || apod.date === today.getDate() ) {
         getImageOfTheDay(store)
     }
@@ -98,7 +97,7 @@ const Navigation = (rovers, menuActive, classListFunction, selectedRover) => {
 }
 
 const Dashboard = (store) => {
-    const { selectedRover } = store;
+    const { selectedRover, selectedSol } = store;
 
     const roverData = store[selectedRover] || {};
 
@@ -110,29 +109,51 @@ const Dashboard = (store) => {
         return APIError(roverData.error)
     } else {
         // TODO: Add filter for different sols and only the most recent one as default
-        const sol = roverData.manifest.max_sol;
+        const sol = selectedSol[selectedRover] ? selectedSol[selectedRover] : roverData.manifest.max_sol;
         const photos = roverData.photos[sol];
+        const photoData = roverData.manifest.photos.filter(photoData => photoData.sol === sol)[0];
+
+        const photosData = roverData.manifest.photos;
 
         return `
             <section>
                 <article id="manifest">
                     ${RoverData(roverData.manifest)}
                 </article>
-                ${DashboardPhotos(photos, selectedRover, sol)}
+                ${DashboardPhotos(photos, selectedRover, sol, photoData, photosData)}
             </section>
             `
     }
 }
 
-const DashboardPhotos = (photos, rover, sol) => {
+const DashboardPhotos = (photos, rover, sol, data, allData) => {
     if (photos && photos.error) {
         return APIError(photos.error);
     } else if (photos) {
-        return `<section>${photos.map(photo => `<img src="${photo.img_src}"/>`).join('')}</section>`;
+        return `
+            <section id="photo-section">
+                <h2>Photos from Sol ${sol}</h2>
+                <div>
+                    <p>Earth Date: ${data.earth_date}</p>
+                    <p>Photo Count: ${data.total_photos}</p>
+                    <p>Select The Mars Day: ${DashboardSelectSol(sol, allData)}</p>
+                </div>
+                ${photos.map(photo => `<img src="${photo.img_src}"/>`).join('')}
+            </section>`;
     } else {
         getPhotos(rover, sol)
         return `<section>Loading Photos</section>`;
     }
+}
+
+const DashboardSelectSol = (selected, options) => {
+    return `
+        <select onchange="selectSol(event)">
+            ${options.reverse().reduce((prevValue, newValue) => {
+                return prevValue + `<option ${newValue.sol === selected ? 'selected="selected"' : ''} value="${newValue.sol}">${newValue.sol}</option>`
+            }, '')}
+        </select>
+    `
 }
 
 const RoverData = (data) => {
@@ -142,7 +163,7 @@ const RoverData = (data) => {
             <span>Launched on ${data.launch_date}</span>
             <span>Landed on ${data.landing_date}</span>
             <span>Current Status: ${data.status}</span>
-        <p>
+        </p>
     `
 }
 
@@ -202,6 +223,10 @@ const hideMenu = () => {
 
     // Set the state without rerendering the page
     updateStore(store, { menuActive: false }, true)
+}
+
+const selectSol = (event) => {
+    updateStore(store, { selectedSol: Object.assign({}, store.selectedSol, { [store.selectedRover]: parseInt(event.target.value) }) })
 }
 
 // ------------------------------------------------------  API CALLS

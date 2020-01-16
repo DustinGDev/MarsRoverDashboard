@@ -3,21 +3,40 @@
 body {
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
   font-family: Arial;
   min-height: 100vh;
 }
 
+#root {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
 header {
   /* header styles */
+  width: 100vw;
+  height: 100px;
+  background: orange;
 }
 
 main {
   flex: 1;
   padding: 20px;
+  box-sizing: border-box;
+  overflow: scroll;
+  height: calc(100vh - 100px);
 }
 
 footer {
   /* footer styles */
+}
+
+nav {
+  width: 200px;
+  background: black;
+  height: calc(100vh - 100px);
 }
 
 /* -------------------  TABLET  --------------------- */

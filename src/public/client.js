@@ -21,7 +21,7 @@ const render = async (root, state) => {
 
 // create content
 const App = (state) => {
-    const { rovers, apod, menuActive } = state
+    const { rovers, apod, menuActive, selectedRover } = state
 
     const navbarClasslistFunction = classListGenerator('nav');
 
@@ -30,8 +30,8 @@ const App = (state) => {
             <img id="hamburger-menu" onclick="toggleMenu()" src="./assets/images/hamburger-menu.svg" />
             <h1>Mars Rover Dashboard</h1>
         </header>
-        ${Navigation(rovers, menuActive, navbarClasslistFunction)}
-        <main onclick="toggleMenu()">
+        ${Navigation(rovers, menuActive, navbarClasslistFunction, selectedRover)}
+        <main onclick="hideMenu()">
             ${Dashboard(store)}
         </main>
         <footer></footer>
@@ -86,10 +86,15 @@ const ImageOfTheDay = (apod) => {
     }
 }
 
-const Navigation = (rovers, menuActive, classListFunction) => {
-    let navbarClasses = classListFunction(menuActive);
+const Navigation = (rovers, menuActive, classListFunction, selectedRover) => {
+    const navbarClasses = classListFunction(menuActive);
+    const roverClassListGenerator = classListGenerator('nav-rover');
 
-    return `<nav onclick="toggleMenu()" class=${navbarClasses.join(' ')}>${rovers.map(rover => `<button id=${rover.toLowerCase()} onclick="setRover('${rover.toLowerCase()}')">${rover}</button>`).join('')}</nav>`;
+    return `
+        <nav onclick="toggleMenu()" class=${navbarClasses.join(' ')}>
+            ${rovers.map(rover => `<button class=${roverClassListGenerator(rover, selectedRover).join(' ')} id=${rover.toLowerCase()} onclick="setRover('${rover.toLowerCase()}')">${rover}</button>`).join('')}
+        </nav>
+        `;
 }
 
 const Dashboard = (store) => {
@@ -162,6 +167,16 @@ const classListGenerator = (type) => {
     
             return classList
         }
+    } else if (type === 'nav-rover') {
+        return (rover, selectedRover) => {
+            const classList = [];
+    
+            if (rover.toLowerCase() === selectedRover.toLowerCase()) {
+                classList.push('active')
+            }
+    
+            return classList
+        }
     }
 }
 
@@ -180,6 +195,13 @@ const toggleMenu = () => {
     // Set the state without rerendering the page
     updateStore(store, { menuActive: !store.menuActive }, true)
 
+}
+
+const hideMenu = () => {
+    document.querySelector('nav').classList.remove('active');
+
+    // Set the state without rerendering the page
+    updateStore(store, { menuActive: false }, true)
 }
 
 // ------------------------------------------------------  API CALLS

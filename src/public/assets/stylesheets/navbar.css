@@ -14,13 +14,28 @@ nav.active {
 
 nav button {
   width: 100%;
-  height: 80px;
+  height: 40px;
+  margin-top: 40px;
   font-size: 1.2em;
   font-family: 'Electrolize', sans-serif;
   background: none;
   border: none;
   color: rgb(189, 177, 161);
+  border-bottom: 2px solid rgb(189, 177, 161);
+  border-top: 2px solid rgb(189, 177, 161);
 }
+
+nav button:hover {
+  color: rgb(236, 223, 205);
+}
+
+nav button.active {
+  color: rgb(236, 223, 205);
+  box-sizing: border-box;
+  border-right: 13px solid rgb(33, 190, 33);
+  padding-left: 6.5px;
+}
+
 
 #hamburger-menu {
   margin: 12px;

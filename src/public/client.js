@@ -3,14 +3,15 @@ let store = {
     apod: '',
     selectedRover: 'curiosity',
     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
+    menuActive: false
 }
 
 // add our markup to the page
 const root = document.getElementById('root')
 
-const updateStore = (store, newState) => {
+const updateStore = (store, newState, preventRerender) => {
     store = Object.assign(store, newState)
-    render(root, store)
+    !preventRerender && render(root, store)
 }
 
 const render = async (root, state) => {
@@ -20,26 +21,17 @@ const render = async (root, state) => {
 
 // create content
 const App = (state) => {
-    let { rovers, apod } = state
+    const { rovers, apod, menuActive } = state
+
+    const navbarClasslistFunction = classListGenerator('nav');
 
     return `
-        <header></header>
-        ${Navigation(rovers)}
-        <main>
-            ${Greeting(store.user.name)}
-            <section>
-                <h3>Put things on the page!</h3>
-                <p>Here is an example section.</p>
-                <p>
-                    One of the most popular websites at NASA is the Astronomy Picture of the Day. In fact, this website is one of
-                    the most popular websites across all federal agencies. It has the popular appeal of a Justin Bieber video.
-                    This endpoint structures the APOD imagery and associated metadata so that it can be repurposed for other
-                    applications. In addition, if the concept_tags parameter is set to True, then keywords derived from the image
-                    explanation are returned. These keywords could be used as auto-generated hashtags for twitter or instagram feeds;
-                    but generally help with discoverability of relevant imagery.
-                </p>
-                ${ImageOfTheDay(apod)}
-            </section>
+        <header>
+            <img id="hamburger-menu" onclick="toggleMenu()" src="./assets/images/hamburger-menu.svg" />
+            <h1>Mars Rover Dashboard</h1>
+        </header>
+        ${Navigation(rovers, menuActive, navbarClasslistFunction)}
+        <main onclick="toggleMenu()">
             ${Dashboard(store)}
         </main>
         <footer></footer>
@@ -94,8 +86,10 @@ const ImageOfTheDay = (apod) => {
     }
 }
 
-const Navigation = (rovers) => {
-    return `<nav>${rovers.map(rover => `<button id=${rover.toLowerCase()} onclick="setRover('${rover.toLowerCase()}')">${rover}</button>`).join('')}</nav>`;
+const Navigation = (rovers, menuActive, classListFunction) => {
+    let navbarClasses = classListFunction(menuActive);
+
+    return `<nav onclick="toggleMenu()" class=${navbarClasses.join(' ')}>${rovers.map(rover => `<button id=${rover.toLowerCase()} onclick="setRover('${rover.toLowerCase()}')">${rover}</button>`).join('')}</nav>`;
 }
 
 const Dashboard = (store) => {
@@ -103,19 +97,21 @@ const Dashboard = (store) => {
 
     const roverData = store[selectedRover] || {};
 
-    if (!roverData.manifest) {
+    if (!roverData.manifest && !roverData.error) {
         getManifest(selectedRover);
 
         return `<section><p id="loader">Loading ...</p></section>`
+    } else if (roverData.error) {
+        return APIError(roverData.error)
     } else {
         // TODO: Add filter for different sols and only the most recent one as default
-        const sol = roverData.manifest.photos[roverData.manifest.photos.length-1].sol;
+        const sol = roverData.manifest.max_sol;
         const photos = roverData.photos[sol];
 
         return `
             <section>
                 <article id="manifest">
-                    <h1>Rover Data</h1>
+                    ${RoverData(roverData.manifest)}
                 </article>
                 ${DashboardPhotos(photos, selectedRover, sol)}
             </section>
@@ -124,16 +120,66 @@ const Dashboard = (store) => {
 }
 
 const DashboardPhotos = (photos, rover, sol) => {
-    if (photos) {
-        return `<section>${photos.map(photo => `<img src="${photo.img_src}"/>`).join('')}</section>`
+    if (photos && photos.error) {
+        return APIError(photos.error);
+    } else if (photos) {
+        return `<section>${photos.map(photo => `<img src="${photo.img_src}"/>`).join('')}</section>`;
     } else {
         getPhotos(rover, sol)
-        return `<section>Loading Photos</section>`
+        return `<section>Loading Photos</section>`;
     }
 }
 
+const RoverData = (data) => {
+    return `
+        <h2>${data.name} Rover</h2>
+        <p>
+            <span>Launched on ${data.launch_date}</span>
+            <span>Landed on ${data.landing_date}</span>
+            <span>Current Status: ${data.status}</span>
+        <p>
+    `
+}
+
+const APIError = (error) => {
+    return `
+        <section class="api-error">
+            <h2>The following error occured during API request</h2>
+            <p>${error}</p>
+        </section>
+    `
+}
+
+
+const classListGenerator = (type) => {
+    if (type === 'nav') {
+        return (isActive) => {
+            const classList = [];
+    
+            if (isActive) {
+                classList.push('active')
+            }
+    
+            return classList
+        }
+    }
+}
+
+// Event fucntions
 const setRover = (rover) => {
-    updateStore(store, { selectedRover: rover })
+
+    // Timeout for toggle animation
+    setTimeout(() => {
+        updateStore(store, { selectedRover: rover })
+    }, 500)
+}
+
+const toggleMenu = () => {
+    document.querySelector('nav').classList.toggle('active');
+
+    // Set the state without rerendering the page
+    updateStore(store, { menuActive: !store.menuActive }, true)
+
 }
 
 // ------------------------------------------------------  API CALLS
@@ -152,12 +198,25 @@ const getManifest = (rover) => {
 
     fetch(`http://localhost:3000/roverData/${rover}`)
         .then(res => res.json())
+        .then(data => hasApiError(data))
         .then(data => updateStore(store, { [rover]: { manifest: data.manifest.photo_manifest, photos: {} } }))
+        .catch(error => updateStore(store, { [rover]: { error }}))
 }
 
 const getPhotos = (rover, sol) => {
 
     fetch(`http://localhost:3000/photos/${rover}/${sol}`)
         .then(res => res.json())
+        .then(data => hasApiError(data))
         .then(photoManifest => updateStore(store, { [rover]: { manifest: store[rover].manifest, photos: Object.assign({}, store[rover].photos, { [sol]: photoManifest.manifest.photos }) } }))
+        .catch(error => updateStore(store, { [rover]: { manifest: store[rover].manifest, photos: Object.assign({}, store[rover].photos, { [sol]: { error } }) } }))
+}
+
+
+const hasApiError = (data) => {
+    if(data.manifest.error) {
+        throw new Error(data.manifest.error.code)
+    }
+
+    return data;
 }

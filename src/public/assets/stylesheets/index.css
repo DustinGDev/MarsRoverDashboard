@@ -18,9 +18,17 @@ body {
 
 header {
   /* header styles */
+  display: flex;
+  flex-wrap: wrap;
   width: 100vw;
-  height: 100px;
+  height: 60px;
   background: orange;
+}
+
+header h1 {
+  width: 80%;
+  font-size: 1.5em;
+  line-height: 60px;
 }
 
 main {
@@ -28,7 +36,7 @@ main {
   padding: 20px;
   box-sizing: border-box;
   overflow: scroll;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 60px);
 }
 
 footer {

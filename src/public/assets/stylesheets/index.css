@@ -1,3 +1,5 @@
+@import 'navbar.css'; 
+
 /* -------------------  MOBILE  --------------------- */
 
 body {
@@ -31,12 +33,6 @@ main {
 
 footer {
   /* footer styles */
-}
-
-nav {
-  width: 200px;
-  background: black;
-  height: calc(100vh - 100px);
 }
 
 /* -------------------  TABLET  --------------------- */

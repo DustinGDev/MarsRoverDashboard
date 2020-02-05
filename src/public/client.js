@@ -111,7 +111,7 @@ const Dashboard = (store) => {
         // TODO: Add filter for different sols and only the most recent one as default
         const sol = selectedSol[selectedRover] ? selectedSol[selectedRover] : roverData.manifest.max_sol;
         const photos = roverData.photos[sol];
-        const photoData = roverData.manifest.photos.filter(photoData => photoData.sol === sol)[0];
+        const photoData = Immutable.Map(roverData.manifest.photos.filter(photoData => photoData.sol === sol)[0]);
 
         const photosData = roverData.manifest.photos;
 
@@ -180,7 +180,7 @@ const APIError = (error) => {
 const classListGenerator = (type) => {
     if (type === 'nav') {
         return (isActive) => {
-            const classList = [];
+            const classList = Immutable.Map([]);
     
             if (isActive) {
                 classList.push('active')
